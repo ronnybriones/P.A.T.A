@@ -163,3 +163,101 @@ Ruta de bus: {ruta_nombre}
     img.save(buffer, format="PNG")
     img_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
     return render_template("Resultado_QR.html", qrCodeUrl="data:image/png;base64," + img_base64)
+
+@app.route('/historial_qr')
+def historial_qr():
+    if 'usuario' not in session:
+        return redirect('/')
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT h.id, p.nombre, r.nombre, h.fecha_hora
+        FROM historial_QR h
+        JOIN puntos_parada p ON h.punto_id = p.id
+        JOIN rutas_bus r ON h.ruta_id = r.id
+        WHERE h.usuario_id = %s
+        ORDER BY h.fecha_hora DESC
+    """, (session['usuario']['id'],))
+    historial = [
+        {
+            'id': row[0],
+            'punto': row[1],
+            'ruta': row[2],
+            'fecha': row[3].strftime("%Y-%m-%d %H:%M")
+        }
+        for row in cur.fetchall()
+    ]
+    return render_template("historial_qr.html", historial=historial)
+
+@app.route('/qr/ver/<int:qr_id>')
+def visualizar_qr(qr_id):
+    if 'usuario' not in session:
+        return redirect('/')
+
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT u.nombre, u.apellido, u.edad, u.discapacidad, p.nombre, r.nombre
+        FROM historial_QR h
+        JOIN usuarios u ON h.usuario_id = u.id
+        JOIN puntos_parada p ON h.punto_id = p.id
+        JOIN rutas_bus r ON h.ruta_id = r.id
+        WHERE h.id = %s AND h.usuario_id = %s
+    """, (qr_id, session['usuario']['id']))
+    datos = cur.fetchone()
+    if not datos:
+        return "No autorizado o código QR no encontrado", 403
+
+    nombre, apellido, edad, discapacidad, punto, ruta = datos
+    tercera_edad = "Si" if edad >= 65 else "No"
+    discapacidad = discapacidad if discapacidad != 'Ninguna' else 'Ninguna'
+
+    contenido_qr = f"""
+Nombre: {nombre}
+Apellidos: {apellido}
+Discapacidad: {discapacidad}
+Tercera edad: {tercera_edad}
+Punto de parada: {punto}
+Ruta de bus: {ruta}
+    """.strip()
+
+    img = qrcode.make(contenido_qr)
+    buffer = io.BytesIO()
+    img.save(buffer, format="PNG")
+    img_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+    return render_template("Resultado_QR.html", qrCodeUrl="data:image/png;base64," + img_base64)
+
+@app.route('/qr/descargar/<int:qr_id>')
+def descargar_qr(qr_id):
+    if 'usuario' not in session:
+        return redirect('/')
+
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT u.nombre, u.apellido, u.edad, u.discapacidad, p.nombre, r.nombre
+        FROM historial_QR h
+        JOIN usuarios u ON h.usuario_id = u.id
+        JOIN puntos_parada p ON h.punto_id = p.id
+        JOIN rutas_bus r ON h.ruta_id = r.id
+        WHERE h.id = %s AND h.usuario_id = %s
+    """, (qr_id, session['usuario']['id']))
+    datos = cur.fetchone()
+    if not datos:
+        return "No autorizado o código QR no encontrado", 403
+
+    nombre, apellido, edad, discapacidad, punto, ruta = datos
+    tercera_edad = "Si" if edad >= 65 else "No"
+    discapacidad = discapacidad if discapacidad != 'Ninguna' else 'Ninguna'
+
+    contenido_qr = f"""
+Nombre: {nombre}
+Apellidos: {apellido}
+Discapacidad: {discapacidad}
+Tercera edad: {tercera_edad}
+Punto de parada: {punto}
+Ruta de bus: {ruta}
+    """.strip()
+
+    img = qrcode.make(contenido_qr)
+    buffer = io.BytesIO()
+    img.save(buffer, format="PNG")
+    buffer.seek(0)
+    return send_file(buffer, mimetype='image/png', as_attachment=True, download_name=f"QR_{qr_id}.png")
