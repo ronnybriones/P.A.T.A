@@ -261,3 +261,21 @@ Ruta de bus: {ruta}
     img.save(buffer, format="PNG")
     buffer.seek(0)
     return send_file(buffer, mimetype='image/png', as_attachment=True, download_name=f"QR_{qr_id}.png")
+
+@app.route('/qr/eliminar/<int:qr_id>', methods=['POST'])
+def eliminar_qr(qr_id):
+    if 'usuario' not in session:
+        return redirect('/')
+
+    cur = mysql.connection.cursor()
+    try:
+        cur.execute("SELECT id FROM historial_QR WHERE id = %s AND usuario_id = %s", (qr_id, session['usuario']['id']))
+        if not cur.fetchone():
+            return "No autorizado o QR no encontrado", 403
+
+        cur.execute("DELETE FROM historial_QR WHERE id = %s", (qr_id,))
+        mysql.connection.commit()
+        return redirect(url_for('historial_qr'))
+    except Exception as e:
+        print("Error al eliminar QR:", e)
+        return "Error al eliminar", 500
