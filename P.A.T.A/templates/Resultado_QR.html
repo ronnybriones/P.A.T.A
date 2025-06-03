@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Resultado del Código QR</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color:rgb(255, 255, 255);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        header {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .qr-container {
+            text-align: center;
+        }
+
+        .qr-code {
+            width: 300px;
+            height: 300px;
+            border: 5px solid #000;
+            margin-bottom: 10px; /* Separación de 10px debajo del QR */
+        }
+
+        .btn {
+            margin-top: 10px; /* Separación de 10px entre los botones */
+            background-color: #0a1d2f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-container {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <img src="{{ url_for('static', filename='Resource/qr_code_placeholder.png') }}" alt="P.A.T.A" class="logo" />
+        <span class="title">P.A.T.A</span>
+    </header>
+    <div class="qr-container">
+        <h2>Tu código QR</h2>
+        <img src="{{ qrCodeUrl }}" alt="Código QR" class="qr-code" /> <!-- QR generado dinámicamente -->
+    </div>
+    <div class="btn-container">
+        <a href="{{ qrCodeUrl }}" download="codigo_qr.png" class="btn">Descargar</a>
+        <a href="{{ url_for('solicitar_codigo_qr') }}" class="btn">Regresar</a> <!-- Cambia 'solicitar' por el endpoint correcto -->
+    </div>
+</body>
+
+</html>
+

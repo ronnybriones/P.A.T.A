@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>P.A.TA - Información del Usuario</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            background-color:rgb(255, 255, 255);
+        }
+        .left-panel {
+            width: 50%;
+            padding: 20px;
+            background-color:rgb(245, 245, 245);
+        }
+        .right-panel {
+            width: 50%;
+            background-color: #0a1d2f;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        .logo {
+            width: 100px;
+            margin-bottom: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        label {
+            font-size: 14px;
+            text-align: left;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .btn {
+            background-color: #0a1d2f;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .user-info {
+            text-align: center;
+        }
+        .user-info img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: white;
+            margin-bottom: 20px;
+        }
+        .user-info h2 {
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        .user-info p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="left-panel">
+        <img
+            class="logo"
+            src="{{ url_for('static', filename='Resource/qr_code_placeholder.png') }}"
+            alt="Logo"
+        />
+        <form action="{{ url_for('generar_qr') }}" method="POST">
+            <label for="punto-parada">Punto de parada</label>
+            <select id="punto-parada" name="punto-parada" required>
+                {% for punto in puntos %}
+                <option value="{{ punto[0] }}">{{ punto[1] }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="ruta-bus">Ruta de Bus</label>
+            <select id="ruta-bus" name="ruta-bus" required>
+                {% for ruta in rutas %}
+                <option value="{{ ruta[0] }}">{{ ruta[1] }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit" class="btn">Generar QR</button>
+        </form>
+        <button
+            onclick="window.location.href='{{ url_for('historial_qr') }}'"
+            class="btn"
+            style="margin-top: 20px; background-color: #0a1d2f;"
+        >
+            Ver Historial de QR
+        </button>
+    </div>
+
+    <div class="right-panel">
+        <div class="user-info">
+            <img
+                src="{{ url_for('static', filename='Resource/User.png') }}"
+                alt="Usuario"
+            />
+            <h2>Información del Usuario:</h2>
+            <p><strong>Usuario:</strong> {{ usuario.nombre }}</p>
+            <p><strong>Edad:</strong> {{ usuario.edad }}</p>
+            <p><strong>Discapacidad:</strong> {{ usuario.discapacidad or 'Ninguna' }}</p>
+            <p><strong>Tercera Edad:</strong> {{ 'Si' if usuario.edad >= 65 else 'No' }}</p>
+        </div>
+    </div>
+</body>
+</html>

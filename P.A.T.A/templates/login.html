@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>P.A.TA - Iniciar Sesión</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='/style.css') }}" />
+</head>
+
+<body>
+    <div class="container">
+        <img class="logo" src="{{ url_for('static', filename='Resource/qr_code_placeholder.png') }}" alt="QR Code" />
+        <h1 class="titulo-login">P.A.T.A</h1>
+        <form id="loginForm" action="/info-usuario" method="POST">
+            <label for="email">Email</label>
+            <input type="text" id="email" name="email" placeholder="Ejemplo: correo@example.com" required />
+
+            <label for="password">Contraseña</label>
+            <input type="password" id="password" name="password" placeholder="Contraseña" required />
+
+            <div>
+                <input type="checkbox" id="remember-me" name="remember-me" />
+                <label for="remember-me">Recuérdame</label>
+            </div>
+
+            <button type="submit" class="btn">Iniciar Sesión</button>
+        </form>
+
+        <div class="footer">
+            <a href="#">¿Olvidaste tu contraseña?</a><br />
+            <a href="/registro">Crear Cuenta</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function (event) {
+            event.preventDefault(); // Evitar que el formulario se envíe de forma tradicional
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            const loginData = { email, password };
+
+            fetch('/info-usuario', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(loginData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+
+                        window.location.href = '/solicitar_codigo_QR';  
+                    } else {
+                        alert('Nombre de usuario o contraseña incorrectos.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al iniciar sesión:', error);
+                    alert('Hubo un problema con el inicio de sesión. Intenta de nuevo.');
+                });
+        });
+    </script>
+</body>
+
+</html>
