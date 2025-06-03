@@ -278,7 +278,7 @@ def eliminar_qr(qr_id):
         return redirect(url_for('historial_qr'))
     except Exception as e:
         print("Error al eliminar QR:", e)
-        return "Error al eliminar", 500
+        return "Error al eliminar", 500
     
 @app.route('/gestion')
 def gestion():
