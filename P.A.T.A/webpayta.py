@@ -279,3 +279,70 @@ def eliminar_qr(qr_id):
     except Exception as e:
         print("Error al eliminar QR:", e)
         return "Error al eliminar", 500
+    
+@app.route('/gestion')
+def gestion():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM rutas_bus")
+    rutas = [{'id': row[0], 'nombre': row[1]} for row in cur.fetchall()]
+    cur.execute("SELECT * FROM puntos_parada")
+    paradas = [{'id': row[0], 'nombre': row[1]} for row in cur.fetchall()]
+    cur.close()
+    return render_template("gestion_rutas_paradas.html", rutas=rutas, paradas=paradas)
+
+@app.route('/agregar_ruta', methods=['POST'])
+def agregar_ruta():
+    nombre_ruta = request.form['nombre_ruta']
+    punto_parada_id = request.form['punto_parada_id']
+
+    cur = mysql.connection.cursor()
+    cur.execute("INSERT INTO rutas_bus (nombre, punto_parada_id) VALUES (%s, %s)", (nombre_ruta, punto_parada_id))
+    mysql.connection.commit()
+    cur.close()
+
+    return redirect(url_for('gestion'))
+
+
+@app.route('/editar_ruta/<int:id>', methods=['POST'])
+def editar_ruta(id):
+    nombre = request.form['nombre_ruta']
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE rutas_bus SET nombre=%s WHERE id=%s", [nombre, id])
+    mysql.connection.commit()
+    return redirect(url_for('gestion'))
+
+@app.route('/eliminar_ruta/<int:id>', methods=['POST'])
+def eliminar_ruta(id):
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM rutas_bus WHERE id=%s", [id])
+    mysql.connection.commit()
+    return redirect(url_for('gestion'))
+
+@app.route('/agregar_parada', methods=['POST'])
+def agregar_parada():
+    nombre = request.form['nombre_parada']
+    cur = mysql.connection.cursor()
+    cur.execute("INSERT INTO puntos_parada (nombre) VALUES (%s)", [nombre])
+    mysql.connection.commit()
+    return redirect(url_for('gestion'))
+
+@app.route('/editar_parada/<int:id>', methods=['POST'])
+def editar_parada(id):
+    nombre = request.form['nombre_parada']
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE puntos_parada SET nombre=%s WHERE id=%s", [nombre, id])
+    mysql.connection.commit()
+    return redirect(url_for('gestion'))
+
+@app.route('/eliminar_parada/<int:id>', methods=['POST'])
+def eliminar_parada(id):
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM puntos_parada WHERE id=%s", [id])
+    mysql.connection.commit()
+    return redirect(url_for('gestion'))
+
+
+if __name__ == '__main__':
+    app.run(debug=True, port=3000)
+
+    
