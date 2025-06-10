@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte del Sistema</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h2 { margin-top: 40px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        form div { margin-bottom: 10px; }
+        label { margin-right: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Reporte de Actividad</h1>
+
+    <form method="POST">
+        <div>
+            <label>Usuario:</label>
+            <select name="usuario_id">
+                <option value="">-- Todos --</option>
+                {% for u in usuarios %}
+                    <option value="{{ u[0] }}" {% if filtros.usuario_id == u[0]|string %}selected{% endif %}>{{ u[1] }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Parada:</label>
+            <select name="parada_id">
+                <option value="">-- Todas --</option>
+                {% for p in paradas %}
+                    <option value="{{ p[0] }}" {% if filtros.parada_id == p[0]|string %}selected{% endif %}>{{ p[1] }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Ruta:</label>
+            <select name="ruta_id">
+                <option value="">-- Todas --</option>
+                {% for r in rutas %}
+                    <option value="{{ r[0] }}" {% if filtros.ruta_id == r[0]|string %}selected{% endif %}>{{ r[1] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label>Fecha inicio:</label>
+            <input type="date" name="fecha_inicio" value="{{ filtros.fecha_inicio }}"/>
+            <label>Fecha fin:</label>
+            <input type="date" name="fecha_fin" value="{{ filtros.fecha_fin }}"/>
+            <button type="submit">Filtrar</button>
+        </div>
+    </form>
+
+    <h2>Historial de Generación de Códigos QR</h2>
+    <table>
+        <tr>
+            <th>Usuario</th>
+            <th>Parada</th>
+            <th>Ruta</th>
+            <th>Fecha</th>
+        </tr>
+        {% for row in registros_qr %}
+        <tr>
+            <td>{{ row[0] }} {{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+            <td>{{ row[3] }}</td>
+            <td>{{ row[4].strftime('%Y-%m-%d %H:%M') }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Historial de Sesiones</h2>
+    <table>
+        <tr>
+            <th>Fecha y hora</th>
+            <th>Usuario</th>
+        </tr>
+        {% for s in sesiones %}
+        <tr>
+            <td>{{ s[0].strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>{{ s[1] }} {{ s[2] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
