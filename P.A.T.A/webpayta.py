@@ -4,7 +4,7 @@ import qrcode
 import io
 import base64
 import MySQLdb
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = 'secreto'
@@ -340,6 +340,77 @@ def eliminar_parada(id):
     cur.execute("DELETE FROM puntos_parada WHERE id=%s", [id])
     mysql.connection.commit()
     return redirect(url_for('gestion'))
+
+@app.route('/reporte', methods=['GET', 'POST'])
+def reporte():
+    cur = mysql.connection.cursor()
+
+    # Obtener listas para filtros
+    cur.execute("SELECT id, nombre FROM usuarios")
+    usuarios = cur.fetchall()
+    cur.execute("SELECT id, nombre FROM puntos_parada")
+    paradas = cur.fetchall()
+    cur.execute("SELECT id, nombre FROM rutas_bus")
+    rutas = cur.fetchall()
+
+    # Filtros por formulario
+    usuario_id = request.form.get('usuario_id')
+    parada_id = request.form.get('parada_id')
+    ruta_id = request.form.get('ruta_id')
+    fecha_inicio = request.form.get('fecha_inicio')
+    fecha_fin = request.form.get('fecha_fin')
+    if fecha_inicio:
+        fecha_inicio += " 00:00:00"
+    if fecha_fin:
+        fecha_fin += " 23:59:59"
+    
+    query = """
+        SELECT u.nombre, u.apellido, p.nombre, r.nombre, h.fecha_hora
+        FROM historial_QR h
+        JOIN usuarios u ON h.usuario_id = u.id
+        JOIN puntos_parada p ON h.punto_id = p.id
+        JOIN rutas_bus r ON h.ruta_id = r.id
+        WHERE 1=1
+    """
+    filtros = []
+
+    if usuario_id:
+        query += " AND u.id = %s"
+        filtros.append(usuario_id)
+    if parada_id:
+        query += " AND p.id = %s"
+        filtros.append(parada_id)
+    if ruta_id:
+        query += " AND r.id = %s"
+        filtros.append(ruta_id)
+    if fecha_inicio:
+        query += " AND h.fecha_hora >= %s"
+        filtros.append(fecha_inicio)
+    if fecha_fin:
+        query += " AND h.fecha_hora <= %s"
+        filtros.append(fecha_fin)
+
+    query += " ORDER BY h.fecha_hora DESC"
+
+    cur.execute(query, filtros)
+    registros_qr = cur.fetchall()
+
+    # Historial de sesiones
+    cur.execute("""
+        SELECT s.fecha_hora_inicio, u.nombre, u.apellido
+        FROM historial_sesiones s
+        JOIN usuarios u ON s.usuario_id = u.id
+        ORDER BY s.fecha_hora_inicio DESC
+    """)
+    sesiones = cur.fetchall()
+
+    return render_template("reporte.html",
+                           usuarios=usuarios,
+                           paradas=paradas,
+                           rutas=rutas,
+                           registros_qr=registros_qr,
+                           sesiones=sesiones,
+                           filtros=request.form)
 
 
 if __name__ == '__main__':
