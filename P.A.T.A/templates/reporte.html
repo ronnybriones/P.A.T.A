@@ -51,6 +51,17 @@
             <button type="submit">Filtrar</button>
         </div>
     </form>
+<div style="margin-top: 20px;">
+    <form method="POST" action="{{ url_for('descargar_reporte_qr_pdf') }}" style="display: inline;">
+        <input type="hidden" name="usuario_id" value="{{ filtros.usuario_id }}">
+        <input type="hidden" name="parada_id" value="{{ filtros.parada_id }}">
+        <input type="hidden" name="ruta_id" value="{{ filtros.ruta_id }}">
+        <input type="hidden" name="fecha_inicio" value="{{ filtros.fecha_inicio }}">
+        <input type="hidden" name="fecha_fin" value="{{ filtros.fecha_fin }}">
+        <button type="submit">📄 Descargar PDF</button>
+    </form>
+</div>
+
 
     <h2>Historial de Generación de Códigos QR</h2>
     <table>

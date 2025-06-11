@@ -3,6 +3,8 @@ from flask_mysqldb import MySQL
 import qrcode
 import io
 import base64
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 import MySQLdb
 from datetime import datetime, timedelta
 
@@ -412,6 +414,82 @@ def reporte():
                            sesiones=sesiones,
                            filtros=request.form)
 
+@app.route('/reporte/descargar/pdf', methods=['POST'])
+def descargar_reporte_qr_pdf():
+    cur = mysql.connection.cursor()
+
+    usuario_id = request.form.get('usuario_id')
+    parada_id = request.form.get('parada_id')
+    ruta_id = request.form.get('ruta_id')
+    fecha_inicio = request.form.get('fecha_inicio')
+    fecha_fin = request.form.get('fecha_fin')
+
+    if fecha_inicio:
+        fecha_inicio += " 00:00:00"
+    if fecha_fin:
+        fecha_fin += " 23:59:59"
+
+    query = """
+        SELECT u.nombre, u.apellido, p.nombre, r.nombre, h.fecha_hora
+        FROM historial_QR h
+        JOIN usuarios u ON h.usuario_id = u.id
+        JOIN puntos_parada p ON h.punto_id = p.id
+        JOIN rutas_bus r ON h.ruta_id = r.id
+        WHERE 1=1
+    """
+    filtros = []
+
+    if usuario_id:
+        query += " AND u.id = %s"
+        filtros.append(usuario_id)
+    if parada_id:
+        query += " AND p.id = %s"
+        filtros.append(parada_id)
+    if ruta_id:
+        query += " AND r.id = %s"
+        filtros.append(ruta_id)
+    if fecha_inicio:
+        query += " AND h.fecha_hora >= %s"
+        filtros.append(fecha_inicio)
+    if fecha_fin:
+        query += " AND h.fecha_hora <= %s"
+        filtros.append(fecha_fin)
+
+    query += " ORDER BY h.fecha_hora DESC"
+    cur.execute(query, filtros)
+    registros = cur.fetchall()
+
+    buffer = io.BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=letter)
+    pdf.setTitle("Reporte de códigos QR generados")
+
+    pdf.drawString(50, 750, "Reporte de Códigos QR Generados")
+    pdf.drawString(50, 735, f"Total registros: {len(registros)}")
+    y = 710
+
+    pdf.setFont("Helvetica", 10)
+
+    pdf.drawString(50, y, "Nombre")
+    pdf.drawString(150, y, "Parada")
+    pdf.drawString(300, y, "Ruta")
+    pdf.drawString(450, y, "Fecha")
+    y -= 20
+
+    for r in registros:
+        if y < 40:
+            pdf.showPage()
+            y = 750
+        pdf.drawString(50, y, f"{r[0]} {r[1]}")
+        pdf.drawString(150, y, r[2])
+        pdf.drawString(300, y, r[3])
+        pdf.drawString(450, y, r[4].strftime("%Y-%m-%d %H:%M"))
+        y -= 18
+
+    pdf.save()
+    buffer.seek(0)
+
+    return send_file(buffer, mimetype='application/pdf',
+                     download_name="reporte_qr.pdf", as_attachment=True)
 
 if __name__ == '__main__':
     app.run(debug=True, port=3000)
